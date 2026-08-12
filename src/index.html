@@ -170,8 +170,8 @@ function loadMatrix(){
 
 function loadLessons(){
   Promise.all([
-    fetch(CONTENT+'/curriculum.json').then(function(r){return r.json()}),
-    fetch(API+'?uid='+UID).then(function(r){return r.json()}).catch(function(){return{}})
+    fetch(CONTENT+'/curriculum.json?_='+Date.now()).then(function(r){return r.json()}),
+    fetch(API+'?uid='+UID+'&_='+Date.now()).then(function(r){return r.json()}).catch(function(){return{}})
   ]).then(function(r){
     _lessons=r[0].lessons||[];_progress=r[1].lessons||{};renderLessons();updateProgress();
   }).catch(function(){document.getElementById('lessons-content').innerHTML='<div class="empty"><div class="icon">📡</div><p>内容加载中</p></div>'});
@@ -251,12 +251,12 @@ function renderLessonDetail(id){
     else h+='<div class="result-banner pass" style="margin:16px 0">✅ 本课已完成</div>';
 
     document.getElementById('detail-body').innerHTML=h;
-    if(!p.pre_test_done&&d.preTest)renderPreTest(d.preTest);
+    if(!p.pre_test_done&&d.preTest){_preTestAnswers=[];renderPreTest(d.preTest);}
   }).catch(function(){document.getElementById('detail-body').innerHTML='<div class="empty"><div class="icon">📡</div><p>课程内容加载失败</p></div>'});
 }
 
 function renderPreTest(qs){
-  var h='';_preTestAnswers=[];
+  var h='';
   qs.forEach(function(q,qi){
     h+='<p style="font-weight:600;margin:12px 0 4px">'+(qi+1)+'. '+q.question+'</p>';
     q.options.forEach(function(opt,oi){
@@ -294,7 +294,7 @@ function saveProgress(data){
 
 document.querySelector('[data-page="report"]').addEventListener('click',function(){
   if(!UID)return;
-  fetch(API+'?uid='+UID).then(function(r){return r.json()}).then(function(d){
+  fetch(API+'?uid='+UID+'&_='+Date.now()).then(function(r){return r.json()}).then(function(d){
     var ls=d.lessons||{},done=0,tt=d.total_time||0;
     Object.keys(ls).forEach(function(k){if(ls[k].status==='done')done++;});
     var p=_lessons.length?Math.round(done/_lessons.length*100):0;

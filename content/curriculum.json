@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "total_lessons": 11,
+  "total_lessons": 12,
   "stages": 4,
   "lessons": [
     {
@@ -97,6 +97,15 @@
       "id": "L11",
       "number": 11,
       "title": "评审AI的技术方案",
+      "stage": 3,
+      "duration": 60,
+      "level": "L3-能沟通",
+      "dimension": "判断决策"
+    },
+    {
+      "id": "L12",
+      "number": 12,
+      "title": "建立你的AI开发工作流",
       "stage": 3,
       "duration": 60,
       "level": "L3-能沟通",
