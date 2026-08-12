@@ -1,0 +1,139 @@
+{
+  "id": "L05",
+  "title": "数据从哪来到哪去",
+  "desc": "系统是数据的搬运工。你管仓库知道「入库→存储→出库」，理解数据库和API的数据流也是一样。用8D工作台的6张数据表和API链路做训练。",
+  "objectives": [
+    "理解数据库表 = Excel的关联Sheet",
+    "理解前端→API→数据库的完整数据流",
+    "能看懂JSON数据结构",
+    "能发现「代码里用了新字段但数据库没建这个字段」的不一致"
+  ],
+  "duration": 60,
+  "level": "L2-能验",
+  "prerequisite": "完成L01-L04",
+  "project": "8D工作台（数据库 + API）",
+
+  "sections": [
+    {
+      "title": "概念讲解（20分钟）",
+      "time": 20,
+      "content": "### 开场：仓库管理 vs 数据库管理\n\n你管仓库，有三个Sheet的Excel：\n\n| Sheet名 | 内容 |\n|---------|------|\n| 入库单 | 日期、供应商、物料、数量 |\n| 出库单 | 日期、客户、物料、数量 |\n| 库存 | 物料、当前库存、安全库存 |\n\n数据库就是一个加强版的Excel：\n- 每个Sheet = 一张「表」（table）\n- 每列 = 一个「字段」（column）\n- 每行 = 一条「记录」（row）\n\n**8D工作台有6张表**（来自T01数据库设计）：\n\n```\ncomplaints        → 客诉记录（谁投诉了什么问题）\neight_d           → 8D报告（D0-D8每个阶段的内容）\neight_d_tasks     → 8D中的整改任务（谁做什么、截止时间）\neight_d_timeline  → 操作时间线（谁在什么时候做了什么）\neight_d_kb        → 知识库（已关闭8D的经验沉淀）\nusers             → 用户（账号、角色、钉钉绑定）\n```\n\n表之间通过 ID 关联，就像仓库的入库单上写着「物料编号 M8-001」，去库存表里查 M8-001 就知道还有多少。\n\n---\n\n### 数据流：从点击按钮到存在数据库\n\n你点击8D工作台「创建客诉」按钮，数据经历了什么？\n\n```\n[浏览器]                      [服务器]                    [数据库]\n   │                             │                          │\n   │ 1.用户填表、点提交          │                          │\n   │ 2.JavaScript收集表单数据    │                          │\n   │   变成JSON：               │                          │\n   │   { customer:\"星越\",        │                          │\n   │     partNo:\"M8-BOLT\",      │                          │\n   │     defect:\"孔径超差\" }     │                          │\n   │                             │                          │\n   │ 3.fetch发送POST请求 ──────→ │ 4.FastAPI收到            │\n   │   /api/complaints           │   验证JWT权限            │\n   │                             │   校验数据格式           │\n   │                             │                          │\n   │                             │ 5.INSERT INTO ─────────→ │ 6.存入complaints表\n   │                             │   complaints             │   新增一行记录\n   │                             │                          │\n   │                             │← 7.返回新记录的ID  ───── │\n   │← 8.收到响应                 │                          │\n   │   显示「创建成功」           │                          │\n```\n\n**你需要记住的关键节点**：\n1. 前端 → API → 数据库，这是三层架构\n2. JSON 是前后端之间的数据传递格式（就像送货单的格式）\n3. 前端改了字段名，API和数据库也要跟着改，否则数据就丢了\n\n---\n\n### JSON：数据的通用语言\n\n前端和后端用什么语言交流？JSON。它长这样：\n\n```json\n{\n  \"id\": 12,\n  \"customer\": \"星越五金\",\n  \"partNo\": \"M8-BOLT\",\n  \"defect\": \"孔径超差 0.05mm\",\n  \"quantity\": 500,\n  \"severity\": \"高\",\n  \"status\": \"PENDING\",\n  \"created_at\": \"2026-08-12T10:30:00Z\"\n}\n```\n\n**类比**：JSON = 送货单的标准格式。不管哪个供应商，送货单都是：客户名、物料编号、数量……格式统一，双方都能看懂。\n\n在浏览器F12的Network面板中，你能看到每一次API请求发送的JSON和返回的JSON。这是你追踪数据流最直接的方法。\n\n---\n\n### 最常见的数据不一致\n\nAI开发中，数据不一致是最常见的bug类型。典型场景：\n\n**场景1：加了字段但数据库没加**\n```javascript\n// 前端代码里用了新字段\nlet task = {\n  ...oldFields,\n  reminderSent: false  // ← 新加了提醒标记\n};\n\n// 但是建表SQL没更新！\nCREATE TABLE eight_d_tasks (\n  id SERIAL PRIMARY KEY,\n  title TEXT,\n  assignee TEXT,\n  -- 缺少 reminder_sent BOOLEAN DEFAULT FALSE\n);\n```\n→ 保存时会报错：column \"reminder_sent\" does not exist\n\n**场景2：前后端字段名不一致**\n```javascript\n// 前端传：complaintId\nfetch('/api/8d', { body: JSON.stringify({ complaintId: 5 }) });\n\n// 后端期望：complaint_id（下划线风格）\nCREATE TABLE eight_d (complaint_id INTEGER);\n```\n→ API拿不到数据，因为名字对不上\n\n**你审查时要做的**：\n1. 看到前端代码里有新字段 → 去check建表SQL里有没有\n2. 看到API返回的JSON结构 → 跟前端期望的结构对比\n3. 用Network面板看实际请求/响应 → 验证数据流正确"
+    },
+    {
+      "title": "动手练习（30分钟）",
+      "time": 30,
+      "tasks": [
+        {
+          "id": "task1",
+          "name": "练习1：画出8D工作台的数据库关系（8分钟）",
+          "desc": "根据以下表结构描述，画出表之间的关联关系：",
+          "tables": "complaints (id, customer, partNo, defect, status)\neight_d (id, complaint_id, status, team_leader, root_cause_5why)\neight_d_tasks (id, eight_d_id, title, assignee, status)\neight_d_timeline (id, eight_d_id, user_id, action, created_at)\nusers (id, name, role, dingtalk_userid)\n\n提示：eight_d.complaint_id 关联 complaints.id\neight_d_tasks.eight_d_id 关联 eight_d.id\neight_d_timeline.eight_d_id 关联 eight_d.id\neight_d_timeline.user_id 关联 users.id",
+          "reference": "关联关系：\ncomplaints ← eight_d（一对多：一个客诉可能产生多个8D）\neight_d ← eight_d_tasks（一对多：一个8D有多个任务）\neight_d ← eight_d_timeline（一对多：一个8D有多条时间线记录）\nusers ← eight_d_timeline（一对多：一个用户有多条操作记录）\n关键理解：complaint_id、eight_d_id 就是关联的「钩子」"
+        },
+        {
+          "id": "task2",
+          "name": "练习2：用Network面板追踪API请求（10分钟）",
+          "desc": "打开8D工作台前端，用F12 Network面板追踪数据流：",
+          "steps": [
+            "F12 → 切换到Network面板",
+            "勾选「Preserve log」（保留日志，页面跳转不丢失）",
+            "刷新页面 → 观察发出的所有API请求",
+            "找到一个GET请求 → 点击查看 Request URL、Response",
+            "如果在开发中：点创建客诉按钮 → 观察POST请求 → 查看Request Payload（发出去的数据）→ 查看Response（返回的数据）"
+          ],
+          "checklist": [
+            "能看到API请求的完整URL（如 /api/complaints）",
+            "能看到请求返回的JSON数据",
+            "能分辨GET（查询）和POST（创建）请求"
+          ]
+        },
+        {
+          "id": "task3",
+          "name": "练习3：找数据不一致（7分钟）",
+          "desc": "AI给你8D工作台加了「任务逾期提醒」功能。以下是对应的前后端代码片段。找出数据不一致的地方：",
+          "frontend": "// 前端：任务列表显示逾期状态\nfunction renderTask(task) {\n  let overdue = task.isOverdue ? '<span class=\"badge badge-danger\">逾期</span>' : '';\n  return `<div>${task.title} ${overdue}</div>`;\n}",
+          "backend_api": "// 后端API返回的JSON\n{\n  \"id\": 5,\n  \"title\": \"检查来料批次\",\n  \"assignee\": \"小王\",\n  \"deadline\": \"2026-08-10\",\n  \"status\": \"IN_PROGRESS\"\n}",
+          "question": "前端用了 task.isOverdue，但API返回的JSON中有这个字段吗？",
+          "answer": "没有！API返回的JSON中没有 isOverdue 字段。前端会显示 undefined，逾期标记永远不会出现。需要后端在返回数据时计算 overdue 状态：isOverdue = deadline < today && status !== 'COMPLETED'"
+        },
+        {
+          "id": "task4",
+          "name": "练习4：字段变更影响分析（5分钟）",
+          "desc": "以下改动会产生什么连锁影响？用「变更影响」的思维分析：",
+          "scenario": "8D工作台把用户表的字段从 'name' 改名为 'display_name'。\n\n影响范围分析：\n1. 建表SQL（init_db.sql）→ 需要同步改\n2. 登录API → 返回的用户信息字段名要改\n3. 前端所有用到 user.name 的地方（导航栏显示用户名、任务分配列表等）→ 全部要改成 user.display_name\n4. 钉钉同步用户信息 → 字段名要改\n\n如果漏了任何一处 → 部分功能显示不出用户名"
+        }
+      ]
+    },
+    {
+      "title": "总结反馈（10分钟）",
+      "time": 10,
+      "content": "### 本课核心收获\n\n1. **数据库 = 关联的Excel表**，通过ID钩子互相连接\n2. **数据流 = 前端 → API → 数据库**，JSON是传递格式\n3. **Network面板 = 你的透视镜**，能看到每个请求发了什么、返回了什么\n4. **数据不一致 = 最常见bug**，改字段必须全链路同步\n\n### 自查问题\n\n- 我能说出8D工作台6张表的各自用途吗？\n- 我能用Network面板追踪一次完整的请求-响应吗？\n- 给我一段前端代码和一段API响应，我能发现字段名不匹配吗？\n\n### 下节课\n\nL06：功能测试与边界测试。学会写测试用例，让AI的交付无处遁形。"
+    }
+  ],
+
+  "preTest": [
+    {
+      "id": "Q01", "type": "choice",
+      "question": "数据库中的「表」最接近哪种日常概念？",
+      "options": ["A. 一个文件夹", "B. Excel的一个Sheet（工作表）", "C. 一个文件", "D. 一个网页"],
+      "answer": 1,
+      "explanation": "数据库表就像一个Excel Sheet：有列（字段）和行（记录）。多张表通过ID关联，就像Excel中用VLOOKUP关联不同Sheet。"
+    },
+    {
+      "id": "Q02", "type": "choice",
+      "question": "JSON在前后端之间扮演什么角色？",
+      "options": ["A. 页面样式定义", "B. 数据传递的统一格式", "C. 用户登录验证", "D. 文件存储"],
+      "answer": 1,
+      "explanation": "JSON是前后端数据传递的统一格式，就像送货单的标准模板。前端把数据打包成JSON发给后端，后端处理完也以JSON返回。"
+    },
+    {
+      "id": "Q03", "type": "choice",
+      "question": "前端代码用了 `task.reminderSent` 字段，但数据库建表SQL中没有这个字段。会发生什么？",
+      "options": ["A. 自动创建这个字段", "B. 保存时报错 'column does not exist'", "C. 字段值自动为null", "D. 没有任何影响"],
+      "answer": 1,
+      "explanation": "数据库不知道有这个字段，插入时会报错。这就是数据不一致——代码和数据库不同步。审查时必须检查：前端用了什么新字段，SQL里有没有对应的列。"
+    },
+    {
+      "id": "Q04", "type": "choice",
+      "question": "F12的Network面板主要用来做什么？",
+      "options": ["A. 修改页面的CSS样式", "B. 查看所有网络请求（API调用、文件加载）的详细信息", "C. 写JavaScript代码", "D. 查看页面HTML结构"],
+      "answer": 1,
+      "explanation": "Network面板显示页面发出的所有网络请求——包括API调用、图片加载、JS文件加载等。你可以看到每个请求的URL、请求方式、发送的数据和返回的响应。"
+    },
+    {
+      "id": "Q05", "type": "choice",
+      "question": "8D工作台中，eight_d_tasks.eight_d_id 字段的作用是：",
+      "options": ["A. 标识这个任务属于哪个8D报告", "B. 标识任务由谁完成", "C. 标识任务的优先级", "D. 标识任务的截止时间"],
+      "answer": 0,
+      "explanation": "eight_d_id是外键（关联键），表示这个任务属于哪份8D报告。通过这个ID，可以查到8D报告的完整信息（状态、组长等）。这就是表关联的方式。"
+    }
+  ],
+
+  "postTest": [
+    {
+      "id": "P01",
+      "type": "scenario",
+      "question": "场景：AI为8D工作台新增了「统计看板」功能，需要在数据库创一张新表 stats_cache。前端API返回：\n```json\n{\"pareto\": [...], \"trend\": [...], \"responseTime\": 48}\n```\n\n但建表SQL中只定义了 pareto 和 trend 两个字段，没有 response_time。这个bug会导致什么问题？",
+      "reference": "后端查询 responseTime 时会报错（字段不存在），或者返回undefined。前端统计卡片「平均响应时间」会显示空白或0。修复方法：在建表SQL中增加 response_time INTEGER 字段。\n\n审查要点：API返回的JSON结构必须和数据库表结构一致。每加一个返回字段，都要确认数据库有对应的列。"
+    },
+    {
+      "id": "P02",
+      "type": "scenario",
+      "question": "场景：用Network面板发现一个POST请求返回了500错误。请求的URL是 `/api/8d/status`，Request Payload是 `{\"id\": 12, \"newStatus\": \"D1\"}`。\n\n你会做哪些排查？给出排查步骤。",
+      "reference": "排查步骤：\n1. 看Response的详细信息——500错误通常会返回错误堆栈（哪行代码报错）\n2. 检查8D编号12是否存在、当前状态是什么（可能状态不允许转到D1）\n3. 检查请求是否带了JWT token（Headers里找Authorization）\n4. 检查newStatus的值是否符合状态机规则\n5. 如果以上都正常 → 后端代码可能有bug，需要看uvicorn的日志"
+    }
+  ],
+
+  "supplements": [
+    {
+      "title": "数据流检查清单",
+      "items": [
+        "□ 前端用了新字段 → SQL里有没有对应列？",
+        "□ API返回了新字段 → 前端有没有用到？没用到就多余",
+        "□ 字段名格式统一（全用camelCase或全用snake_case）",
+        "□ 必填字段在API里有校验吗？",
+        "□ 删除操作有级联处理吗（删主表时关联表数据怎么处理）？"
+      ]
+    }
+  ]
+}
