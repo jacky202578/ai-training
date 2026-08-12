@@ -109,7 +109,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 
 <script>
 var API='/training/api',CONTENT='/training/content',UID='',_lessons=[],_progress={},_currentLesson=null,_preTestAnswers=[];
-(function(){UID=localStorage._uid||('user_'+Date.now());localStorage._uid=UID;loadMatrix();loadLessons();})();
+(function initApp(){
+  UID=localStorage._uid||('user_'+Date.now());localStorage._uid=UID;
+  loadMatrix();loadLessons();
+  // Reset to first tab on init
+  document.querySelectorAll('.tab-item').forEach(function(t){t.classList.remove('active')});
+  var first=document.querySelector('[data-page="matrix"]');if(first)first.classList.add('active');
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  var mp=document.getElementById('page-matrix');if(mp)mp.classList.add('active');
+  document.getElementById('detail-view').style.display='none';
+})();
+window.addEventListener('pageshow',function(e){if(e.persisted){initApp();}});
 
 function switchTab(t){
   document.querySelectorAll('.tab-item').forEach(function(x){x.classList.remove('active')});
