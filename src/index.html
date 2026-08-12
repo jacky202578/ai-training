@@ -181,14 +181,13 @@ function renderLessons(){
   var h='',sn={1:'第一阶段：认知重塑',2:'第二阶段：审查能力',3:'第三阶段：验收能力',4:'第四阶段：沟通能力'},ls=0;
   _lessons.forEach(function(l,i){
     if(l.stage!==ls){h+='<div class="stage-header">'+(sn[l.stage]||'第'+l.stage+'阶段')+'</div>';ls=l.stage;}
-    var p=_progress[l.id]||{},s=p.status||'locked',locked=i>0&&s==='locked'&&!(_progress[_lessons[i-1].id]||{}).status;
-    if(i===0||(_progress[_lessons[i-1].id]||{}).status==='done')locked=false;
-    var bg=locked?'#e0e0e0':(s==='done'?'#e8f5e9':'#e3f2fd');
-    var c=locked?'#999':(s==='done'?'var(--green)':'var(--pri)');
-    var st=s==='done'?'✅':(s==='in_progress'?'🔄':(locked?'🔒':'📝'));
-    var cl=(locked?'locked ':'')+(s==='done'?'done ':'');
-    h+='<div class="lesson-card '+cl+'" onclick="'+(locked?'':"openDetail('"+l.id+"')")+'">';
-    h+='<div class="lesson-num" style="background:'+bg+';color:'+c+'">'+(i+1)+'</div>';
+    var p=_progress[l.id]||{},s=p.status||'';
+    var done=s==='done';
+    var bg=done?'#e8f5e9':'#e3f2fd';
+    var ct=done?'var(--green)':'var(--pri)';
+    var st=done?'✅':'📝';
+    h+='<div class="lesson-card" onclick="openDetail(\''+l.id+'\')">';
+    h+='<div class="lesson-num" style="background:'+bg+';color:'+ct+'">'+(i+1)+'</div>';
     h+='<div class="lesson-info"><h4>'+l.title+'</h4><div class="meta">⏱ '+l.duration+'min · '+l.level+'</div></div>';
     h+='<div class="lesson-status">'+st+'</div></div>';
   });
