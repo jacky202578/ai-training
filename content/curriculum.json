@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "total_lessons": 1,
+  "stages": 4,
+  "lessons": [
+    {
+      "id": "lesson_01",
+      "number": 1,
+      "title": "像看图纸一样看代码",
+      "stage": 1,
+      "duration": 60,
+      "level": "L1",
+      "dimension": "认知理解"
+    }
+  ]
+}

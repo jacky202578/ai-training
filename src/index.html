@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>AI交付管理能力培训</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--pri:#1a73e8;--pri-light:#e8f0fe;--bg:#f5f5f5;--card:#fff;--text:#1a1a1a;--text2:#666;--border:#e0e0e0;--green:#0d9e6c;--orange:#e67e22;--red:#e74c3c;--radius:10px;--shadow:0 1px 4px rgba(0,0,0,.08)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden;padding-bottom:70px}
+.tab-bar{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--text2);cursor:pointer;transition:color .2s;user-select:none;-webkit-tap-highlight-color:transparent}
+.tab-item .icon{font-size:20px;margin-bottom:2px}
+.tab-item.active{color:var(--pri)}
+.page{display:none;padding:16px;padding-bottom:80px;min-height:100vh}
+.page.active{display:block}
+.header{background:var(--pri);color:#fff;padding:48px 16px 20px;margin:-16px -16px 16px;border-radius:0 0 16px 16px}
+.header h1{font-size:20px;font-weight:700;margin-bottom:4px}
+.header .sub{font-size:13px;opacity:.85}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card h3{font-size:15px;margin-bottom:8px}
+.card p{font-size:13px;color:var(--text2);line-height:1.6}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+.badge-l1{background:#e8f5e9;color:#2e7d32}
+.badge-l2{background:#fff3e0;color:#e65100}
+.badge-l3{background:#e3f2fd;color:#1565c0}
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:8px 0}
+.progress-fill{height:100%;background:var(--green);border-radius:3px;transition:width .3s}
+.btn{display:inline-block;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;border:none;cursor:pointer;text-align:center;text-decoration:none;-webkit-tap-highlight-color:transparent}
+.btn-pri{background:var(--pri);color:#fff}
+.btn-outline{background:var(--card);color:var(--pri);border:1px solid var(--pri)}
+.btn-block{display:block;width:100%}
+.lesson-card{display:flex;align-items:center;gap:12px;padding:14px;background:var(--card);border-radius:var(--radius);margin-bottom:8px;box-shadow:var(--shadow);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .1s}
+.lesson-card:active{transform:scale(.98)}
+.lesson-num{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.lesson-info{flex:1;min-width:0}
+.lesson-info h4{font-size:14px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lesson-info .meta{font-size:12px;color:var(--text2)}
+.lesson-status{font-size:12px;flex-shrink:0}
+.locked{opacity:.5;pointer-events:none}
+.locked .lesson-num{background:#e0e0e0!important;color:#999}
+.done .lesson-num{background:#e8f5e9!important;color:var(--green)}
+.stage-header{padding:12px 0 8px;font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.detail-header{display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--card);margin:-16px -16px 12px;position:sticky;top:0;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.detail-header .back{font-size:20px;cursor:pointer;padding:4px}
+.detail-header h2{font-size:16px;flex:1}
+.empty{text-align:center;padding:40px 16px;color:var(--text2)}
+.empty .icon{font-size:48px;margin-bottom:12px}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s}
+.toast.show{opacity:1}
+.quiz-option{display:block;width:100%;padding:12px;margin:6px 0;border:1.5px solid var(--border);border-radius:8px;background:var(--card);text-align:left;font-size:13px;cursor:pointer;transition:all .15s}
+.quiz-option:hover,.quiz-option:active{background:var(--pri-light);border-color:var(--pri)}
+.quiz-option.selected{background:var(--pri-light);border-color:var(--pri)}
+.quiz-option.correct{background:#e8f5e9;border-color:var(--green);color:var(--green)}
+.quiz-option.wrong{background:#ffebee;border-color:var(--red);color:var(--red)}
+.result-banner{padding:16px;border-radius:var(--radius);text-align:center;margin:12px 0}
+.result-banner.pass{background:#e8f5e9;color:var(--green)}
+.result-banner.fail{background:#fff3e0;color:var(--orange)}
+.content-body{font-size:14px;line-height:1.8;color:var(--text)}
+.content-body h2{font-size:17px;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.content-body h3{font-size:15px;margin:16px 0 8px}
+.content-body p{margin:10px 0}
+.content-body table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+.content-body th,.content-body td{border:1px solid var(--border);padding:8px;text-align:left}
+.content-body th{background:#f8f9fa;font-weight:600}
+.content-body pre{background:#f4f4f5;padding:12px;border-radius:6px;overflow-x:auto;font-size:12px;line-height:1.5;margin:10px 0}
+.content-body code{font-size:12px;background:#f4f4f5;padding:1px 4px;border-radius:3px}
+.content-body ul,.content-body ol{padding-left:20px;margin:8px 0}
+.content-body li{margin:4px 0}
+.content-body blockquote{border-left:3px solid var(--pri);padding-left:12px;color:var(--text2);margin:12px 0;font-style:italic}
+.radar-container{text-align:center;padding:16px 0}
+.matrix-legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0}
+.matrix-legend span{font-size:11px;padding:3px 8px;border-radius:10px}
+.section-divider{text-align:center;padding:24px 0;color:var(--text2);font-size:12px;border-top:1px dashed var(--border);margin-top:20px}
+</style>
+</head>
+<body>
+
+<!-- Tab Pages -->
+<div id="page-matrix" class="page active">
+  <div class="header">
+    <h1>📊 能力矩阵</h1>
+    <div class="sub">AI交付管理能力 · 三层九维</div>
+  </div>
+  <div id="matrix-content"></div>
+</div>
+
+<div id="page-lessons" class="page">
+  <div class="header">
+    <h1>📚 课程体系</h1>
+    <div class="sub" id="progress-summary">加载中…</div>
+  </div>
+  <div id="lessons-content"></div>
+</div>
+
+<div id="page-report" class="page">
+  <div class="header">
+    <h1>📈 我的报告</h1>
+    <div class="sub" id="report-subtitle">学习进度与能力成长</div>
+  </div>
+  <div id="report-content">
+    <div class="empty"><div class="icon">📭</div><p>完成第一课后这里会有你的学习数据</p></div>
+  </div>
+</div>
+
+<!-- Lesson Detail View (hidden by default) -->
+<div id="detail-view" style="display:none">
+  <div class="detail-header">
+    <span class="back" onclick="closeDetail()">←</span>
+    <h2 id="detail-title"></h2>
+    <span id="detail-badge"></span>
+  </div>
+  <div id="detail-body" style="padding:16px"></div>
+</div>
+
+<!-- Tab Bar -->
+<div class="tab-bar">
+  <div class="tab-item active" data-page="matrix" onclick="switchTab('matrix')">
+    <span class="icon">📊</span>能力矩阵
+  </div>
+  <div class="tab-item" data-page="lessons" onclick="switchTab('lessons')">
+    <span class="icon">📚</span>课程体系
+  </div>
+  <div class="tab-item" data-page="report" onclick="switchTab('report')">
+    <span class="icon">📈</span>我的报告
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ─── Config ───
+var API = '/training/api.php';
+var CONTENT = '/training/content';
+var UID = '';
+
+// ─── Init ───
+(function init() {
+  // Try to get uid from DingTalk, fallback to localStorage
+  try { if (typeof dd !== 'undefined') { dd.ready(function() { dd.getAuthCode({}).then(function(r) { UID = r.code || localStorage._uid || 'guest'; localStorage._uid = UID; }).catch(function() { UID = localStorage._uid || 'guest'; }); }); } else { UID = localStorage._uid || 'guest'; } } catch(e) { UID = localStorage._uid || 'guest'; }
+  if (!localStorage._uid) localStorage._uid = UID;
+  
+  // Give dd.getAuthCode 1s to resolve, then render
+  setTimeout(function() { if (!UID) UID = localStorage._uid || 'guest'; loadMatrix(); loadLessons(); }, 800);
+})();
+
+// ─── Navigation ───
+function switchTab(tab) {
+  document.querySelectorAll('.tab-item').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelector('[data-page="'+tab+'"]').classList.add('active');
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('page-'+tab).classList.add('active');
+  document.getElementById('detail-view').style.display = 'none';
+  document.getElementById('page-'+tab).style.display = 'block';
+}
+
+function openDetail(lessonId) {
+  document.querySelectorAll('.page').forEach(function(p) { p.style.display = 'none'; });
+  document.getElementById('detail-view').style.display = 'block';
+  renderLessonDetail(lessonId);
+}
+
+function closeDetail() {
+  document.getElementById('detail-view').style.display = 'none';
+  var activeTab = document.querySelector('.tab-item.active').getAttribute('data-page');
+  document.getElementById('page-'+activeTab).style.display = 'block';
+}
+
+// ─── Toast ───
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2000);
+}
+
+// ─── Matrix Page ───
+function loadMatrix() {
+  fetch(CONTENT+'/matrix.json').then(function(r) { return r.json(); }).then(renderMatrix).catch(function() {
+    document.getElementById('matrix-content').innerHTML = '<div class="empty"><div class="icon">📡</div><p>内容加载中，请检查网络</p></div>';
+  });
+}
+
+function renderMatrix(data) {
+  var h = '<div class="radar-container"><p style="color:var(--text2);font-size:13px">雷达图占位 — 待V2实现</p></div>';
+  
+  var levels = data.levels || [
+    {id:'L1',name:'能审 — AI方案审查员',badge:'badge-l1',desc:'看懂AI的输出，发现明显问题'},
+    {id:'L2',name:'能验 — AI交付验收员',badge:'badge-l2',desc:'验证逻辑正确性，判断功能是否达标'},
+    {id:'L3',name:'能沟通 — 需求翻译官',badge:'badge-l3',desc:'写出AI能准确执行的规格，管理交付流程'}
+  ];
+  
+  var dims = data.dimensions || ['认知理解','实操技能','判断决策'];
+  
+  levels.forEach(function(lv) {
+    h += '<div class="card"><h3><span class="badge '+lv.badge+'">'+lv.id+'</span> '+lv.name+'</h3>';
+    h += '<p>'+lv.desc+'</p><div class="matrix-legend">';
+    dims.forEach(function(d) { h += '<span style="background:#f0f0f0;color:#666">'+d+'</span>'; });
+    h += '</div></div>';
+  });
+  
+  document.getElementById('matrix-content').innerHTML = h;
+}
+
+// ─── Lessons Page ───
+var _lessons = [];
+var _progress = {};
+
+function loadLessons() {
+  Promise.all([
+    fetch(CONTENT+'/curriculum.json').then(function(r) { return r.json(); }),
+    fetch(API+'?uid='+UID).then(function(r) { return r.json(); }).catch(function() { return {}; })
+  ]).then(function(results) {
+    _lessons = results[0].lessons || [];
+    _progress = results[1].lessons || {};
+    renderLessons();
+    updateProgress();
+  }).catch(function() {
+    document.getElementById('lessons-content').innerHTML = '<div class="empty"><div class="icon">📡</div><p>内容加载中，请检查网络</p></div>';
+  });
+}
+
+function renderLessons() {
+  var h = '';
+  var stageNames = {1:'第一阶段：认知重塑',2:'第二阶段：审查能力',3:'第三阶段：验收能力',4:'第四阶段：沟通能力'};
+  var lastStage = 0;
+  
+  _lessons.forEach(function(l, i) {
+    if (l.stage !== lastStage) {
+      h += '<div class="stage-header">'+(stageNames[l.stage]||'第'+l.stage+'阶段')+'</div>';
+      lastStage = l.stage;
+    }
+    
+    var pro = _progress[l.id] || {};
+    var status = pro.status || 'locked';
+    var isLocked = i > 0 && status === 'locked' && !(_progress[_lessons[i-1].id]||{}).status;
+    
+    // Unlock logic: first lesson always unlocked, others locked until previous done
+    if (i === 0) isLocked = false;
+    else if ((_progress[_lessons[i-1].id]||{}).status === 'done') isLocked = false;
+    
+    var numBg = isLocked ? '#e0e0e0' : (status==='done'?'#e8f5e9':'#e3f2fd');
+    var numColor = isLocked ? '#999' : (status==='done'?'var(--green)':'var(--pri)');
+    var statusText = status==='done'?'✅':(status==='in_progress'?'🔄':(isLocked?'🔒':'📝'));
+    var cls = (isLocked?'locked ':'') + (status==='done'?'done ':'');
+    
+    h += '<div class="lesson-card '+cls+'" onclick="'+(isLocked?'':"openDetail('"+l.id+"')")+'">';
+    h += '<div class="lesson-num" style="background:'+numBg+';color:'+numColor+'">'+(i+1)+'</div>';
+    h += '<div class="lesson-info"><h4>'+l.title+'</h4><div class="meta">⏱ '+l.duration+'min · '+l.level+'</div></div>';
+    h += '<div class="lesson-status">'+statusText+'</div></div>';
+  });
+  
+  document.getElementById('lessons-content').innerHTML = h || '<div class="empty"><div class="icon">📭</div><p>暂无课程</p></div>';
+}
+
+function updateProgress() {
+  var done = 0;
+  _lessons.forEach(function(l) { if ((_progress[l.id]||{}).status === 'done') done++; });
+  var pct = _lessons.length ? Math.round(done/_lessons.length*100) : 0;
+  document.getElementById('progress-summary').textContent = '已完成 '+done+'/'+_lessons.length+' 课（'+pct+'%）';
+}
+
+// ─── Lesson Detail ───
+var _currentLesson = null;
+
+function renderLessonDetail(lessonId) {
+  fetch(CONTENT+'/lessons/'+lessonId+'.json').then(function(r) { return r.json(); }).then(function(data) {
+    _currentLesson = data;
+    var pro = _progress[lessonId] || {};
+    
+    document.getElementById('detail-title').textContent = data.title;
+    document.getElementById('detail-badge').innerHTML = '<span class="badge badge-'+data.level.toLowerCase()+'">'+data.level+'</span>';
+    
+    var h = '';
+    h += '<div class="card"><p>⏱ '+data.duration+'分钟 · 🎯 '+data.dimension+'</p>';
+    h += '<div style="margin-top:8px"><strong>学习目标：</strong><ul style="margin:4px 0 0 16px;font-size:13px">';
+    (data.objectives||[]).forEach(function(o) { h += '<li>'+o+'</li>'; });
+    h += '</ul></div></div>';
+    
+    // Pre-test section
+    h += '<div class="card"><h3>📝 课前自测（'+((data.pre_test||{}).questions||[]).length+'题）</h3>';
+    h += '<div id="pretest-container" style="margin-top:12px">';
+    if (pro.pre_test_done) {
+      h += '<div class="result-banner pass">✅ 已完成 · 得分 '+pro.pre_score+'/'+((data.pre_test||{}).questions||[]).length+'</div>';
+    } else {
+      h += '<div id="pretest-questions"></div>';
+    }
+    h += '</div></div>';
+    
+    // Content section
+    h += '<div class="card"><h3>📖 课程内容</h3>';
+    h += '<div class="content-body" style="margin-top:12px">'+(data.content||'')+'</div></div>';
+    
+    // Post-practice section
+    if (data.post_practice) {
+      h += '<div class="card"><h3>📋 课后练习</h3>';
+      h += '<p style="font-size:13px;color:var(--text2)">'+data.post_practice.task+'</p>';
+      if (data.post_practice.code_snippet) {
+        h += '<pre>'+data.post_practice.code_snippet+'</pre>';
+      }
+      if (pro.post_done) {
+        h += '<div class="result-banner pass">✅ 已提交 · 待对比式反馈</div>';
+      } else {
+        h += '<button class="btn btn-outline btn-block" onclick="submitPostPractice()" style="margin-top:12px">提交我的审查意见</button>';
+      }
+      h += '</div>';
+    }
+    
+    // Complete button
+    if (pro.status !== 'done') {
+      h += '<button class="btn btn-pri btn-block" onclick="markComplete()" style="margin:16px 0">✅ 完成本课</button>';
+    } else {
+      h += '<div class="result-banner pass" style="margin:16px 0">✅ 本课已完成 · 得分 '+pro.score+'</div>';
+    }
+    
+    document.getElementById('detail-body').innerHTML = h;
+    
+    // Render pre-test questions now that DOM is ready
+    if (!pro.pre_test_done && data.pre_test) {
+      renderPreTest(data.pre_test.questions);
+    }
+  }).catch(function() {
+    document.getElementById('detail-body').innerHTML = '<div class="empty"><div class="icon">📡</div><p>课程内容加载失败</p></div>';
+  });
+}
+
+// ─── Pre-test ───
+var _preTestAnswers = [];
+
+function renderPreTest(questions) {
+  var h = '';
+  questions.forEach(function(q, qi) {
+    h += '<p style="font-weight:600;margin:12px 0 4px">'+(qi+1)+'. '+q.q+'</p>';
+    q.options.forEach(function(opt, oi) {
+      var selected = _preTestAnswers[qi] === oi;
+      h += '<button class="quiz-option'+(selected?' selected':'')+'" onclick="selectPreTest('+qi+','+oi+')">'+'ABCD'[oi]+'. '+opt+'</button>';
+    });
+  });
+  h += '<button class="btn btn-pri btn-block" onclick="submitPreTest()" style="margin-top:12px">提交答案</button>';
+  document.getElementById('pretest-questions').innerHTML = h;
+}
+
+function selectPreTest(qi, oi) {
+  _preTestAnswers[qi] = oi;
+  renderPreTest((_currentLesson.pre_test||{}).questions);
+}
+
+function submitPreTest() {
+  var questions = (_currentLesson.pre_test||{}).questions;
+  var correct = 0;
+  questions.forEach(function(q, qi) { if (_preTestAnswers[qi] === q.answer) correct++; });
+  
+  // Mark correct/wrong
+  var btns = document.querySelectorAll('#pretest-questions .quiz-option');
+  var idx = 0;
+  questions.forEach(function(q, qi) {
+    q.options.forEach(function(_, oi) {
+      if (oi === q.answer) btns[idx].classList.add('correct');
+      if (oi === _preTestAnswers[qi] && oi !== q.answer) btns[idx].classList.add('wrong');
+      idx++;
+    });
+  });
+  
+  document.getElementById('pretest-container').innerHTML = '<div class="result-banner '+(correct>=3?'pass':'fail')+'">✅ '+correct+'/'+questions.length+' 正确</div>';
+  
+  // Save to progress
+  saveProgress({pre_test_done: true, pre_score: correct});
+}
+
+// ─── Post Practice ───
+function submitPostPractice() {
+  var answer = prompt('请输入你的审查意见（描述这段代码渲染的界面）：');
+  if (!answer) return;
+  
+  saveProgress({post_done: true, post_answer: answer});
+  toast('审查意见已提交');
+  document.getElementById('detail-body').querySelector('.btn-outline').textContent = '已提交 ✅';
+  document.getElementById('detail-body').querySelector('.btn-outline').disabled = true;
+}
+
+// ─── Complete Lesson ───
+function markComplete() {
+  if (!confirm('确认完成本课学习？')) return;
+  var score = _progress[_currentLesson.id] ? (_progress[_currentLesson.id].pre_score||0)*20 : 0;
+  saveProgress({status: 'done', score: score, completed_at: new Date().toISOString()});
+  
+  // Unlock next
+  _progress[_currentLesson.id] = _progress[_currentLesson.id] || {};
+  _progress[_currentLesson.id].status = 'done';
+  _progress[_currentLesson.id].score = score;
+  
+  toast('🎉 恭喜完成！');
+  setTimeout(function() { closeDetail(); loadLessons(); }, 1000);
+}
+
+// ─── Save Progress ───
+function saveProgress(data) {
+  var key = _currentLesson ? _currentLesson.id : '';
+  var lessonData = _progress[key] || {};
+  Object.keys(data).forEach(function(k) { lessonData[k] = data[k]; });
+  _progress[key] = lessonData;
+  
+  fetch(API, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({uid: UID, lesson_id: key, data: lessonData})
+  }).catch(function() { /* silent fail — will retry next load */ });
+}
+
+// ─── Report Page ───
+// Refreshed when tab is switched
+document.querySelector('[data-page="report"]').addEventListener('click', function() {
+  if (!UID) return;
+  fetch(API+'?uid='+UID).then(function(r) { return r.json(); }).then(function(data) {
+    loadReport(data);
+  }).catch(function() {});
+});
+
+function loadReport(data) {
+  var lessons = data.lessons || {};
+  var done = 0, totalTime = data.total_time || 0;
+  Object.keys(lessons).forEach(function(k) { if (lessons[k].status === 'done') done++; });
+  var pct = _lessons.length ? Math.round(done/_lessons.length*100) : 0;
+  
+  var h = '';
+  h += '<div class="card" style="text-align:center">';
+  h += '<div style="font-size:48px;font-weight:700;color:var(--pri)">'+pct+'%</div>';
+  h += '<p style="color:var(--text2)">'+done+'/'+_lessons.length+' 课时完成</p>';
+  h += '<div class="progress-bar" style="margin:12px auto;max-width:200px"><div class="progress-fill" style="width:'+pct+'%"></div></div>';
+  h += '<p style="font-size:12px;color:var(--text2)">累计学习 '+totalTime+' 分钟</p>';
+  h += '</div>';
+  
+  document.getElementById('report-content').innerHTML = h;
+  document.getElementById('report-subtitle').textContent = '已学 '+done+' 课 · '+pct+'%';
+}
+</script>
+</body>
+</html>
