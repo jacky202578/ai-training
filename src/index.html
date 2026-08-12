@@ -140,12 +140,9 @@ var UID = '';
 
 // ─── Init ───
 (function init() {
-  // Try to get uid from DingTalk, fallback to localStorage
-  try { if (typeof dd !== 'undefined') { dd.ready(function() { dd.getAuthCode({}).then(function(r) { UID = r.code || localStorage._uid || 'guest'; localStorage._uid = UID; }).catch(function() { UID = localStorage._uid || 'guest'; }); }); } else { UID = localStorage._uid || 'guest'; } } catch(e) { UID = localStorage._uid || 'guest'; }
-  if (!localStorage._uid) localStorage._uid = UID;
-  
-  // Give dd.getAuthCode 1s to resolve, then render
-  setTimeout(function() { if (!UID) UID = localStorage._uid || 'guest'; loadMatrix(); loadLessons(); }, 800);
+  UID = localStorage._uid || ('user_' + Date.now());
+  localStorage._uid = UID;
+  loadMatrix(); loadLessons();
 })();
 
 // ─── Navigation ───
