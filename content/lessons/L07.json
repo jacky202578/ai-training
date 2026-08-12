@@ -1,0 +1,138 @@
+{
+  "id": "L07",
+  "title": "Bug定位 — 用Console听诊",
+  "desc": "设备坏了，老师傅听声音就知道哪的问题。系统出问题，用浏览器Console和Network面板「听诊」，快速判断问题属于前端、后端还是网络。",
+  "objectives": [
+    "掌握Console面板查看报错信息",
+    "理解常见报错类型的含义和根因",
+    "能用Network面板追踪请求状态码判断问题层面",
+    "能从报错反推修复方向"
+  ],
+  "duration": 60,
+  "level": "L2-能验",
+  "prerequisite": "完成L05-L06",
+  "project": "8D工作台",
+
+  "sections": [
+    {
+      "title": "概念讲解（20分钟）",
+      "time": 20,
+      "content": "### 开场：老师傅听诊\n\nCNC机床异响，老师傅听一下就知道：是主轴轴承磨损？是刀具钝了？还是切削参数不对？\n\n系统出bug也一样——报错信息就是系统的「异响」。学会听，你就能判断：\n- 是前端写错了？\n- 是后端崩了？\n- 还是网络断了？\n\n---\n\n### 你的诊断工具：Console + Network\n\n**Console面板（F12 → Console）**：\n- 显示JavaScript运行时的报错\n- 红色文字 = 错误，黄色文字 = 警告\n- 报错信息包含：错误类型 + 文件名 + 行号\n\n**Network面板（F12 → Network）**：\n- 显示所有网络请求\n- 关键看：状态码（Status Code）+ 响应内容（Response）\n- 红色状态码 = 请求失败\n\n---\n\n### 常见报错速查表\n\n| 报错信息 | 中文翻译 | 最可能原因 | 问题层面 |\n|---------|---------|-----------|---------|\n| `Uncaught TypeError: xxx is not a function` | xxx不是一个函数 | 方法名拼错/对象不存在 | 🔵 前端 |\n| `Cannot read property 'xxx' of null` | 读不到xxx属性 | 数据还没加载完就去读了 | 🔵 前端 |\n| `Uncaught ReferenceError: xxx is not defined` | xxx未定义 | 变量没声明或拼写错误 | 🔵 前端 |\n| `404 Not Found` | 找不到资源 | API地址写错/文件不存在 | 🟡 路由 |\n| `500 Internal Server Error` | 服务器内部错误 | 后端代码bug/数据库错误 | 🟠 后端 |\n| `401 Unauthorized` | 未授权 | JWT过期/没传token | 🔵 鉴权 |\n| `403 Forbidden` | 禁止访问 | 权限不足 | 🔵 鉴权 |\n| `Network Error` / `ERR_CONNECTION_REFUSED` | 连不上 | 服务器没启动 | 🔴 网络 |\n| `CORS error` | 跨域错误 | 后端没配置CORS | 🟠 后端 |\n\n---\n\n### 实战：定位一个真实Bug\n\n**场景**：8D工作台点击「保存」按钮，没反应，也没提示。\n\n**诊断步骤**：\n\n1. **打开Console，看有没有红色报错**\n   → 发现：`Uncaught TypeError: dd.ready is not a function`\n   → 判断：`dd`对象不存在，说明钉钉SDK没加载\n   → 原因：可能不在钉钉环境打开，或者SDK加载失败\n\n2. **如果Console没报错，看Network面板**\n   → 点击「保存」按钮 → Network里有没有新的请求出现？\n   → 如果有请求 → 看状态码\n     - 200：请求成功，问题在响应处理\n     - 500：后端崩了，看Response里的错误详情\n     - 404：API地址错了\n   → 如果没有请求 → 前端的点击事件没绑定/被拦截\n\n3. **看Network中请求的Response**\n   → 点开失败的请求 → Response标签\n   → 500错误通常返回：`{\"detail\": \"column 'xxx' does not exist\"}`\n   → 这说明数据库缺字段——L05学过的数据不一致\n\n---\n\n### 快速判断问题层面的口诀\n\n```\nConsole有红字 → 前端JS报错\nNetwork没请求 → 前端事件没触发\nNetwork 404   → 地址错了\nNetwork 500   → 后端崩了（看Response详情）\nNetwork 401   → 没登录/Token过期\nNetwork CORS  → 后端跨域配置问题\nNetwork ERR_  → 服务器没启动或网络不通\n```\n\n---\n\n### 特殊场景：白屏\n\n页面完全空白，什么都看不到。这是最让人慌的bug。\n\n**诊断**：\n1. Console看报错——白屏通常有JS报错导致整个页面渲染中断\n2. 常见原因：某个变量undefined，后续代码全崩了\n3. Network看HTML有没有加载——如果HTML都没加载，是服务器/网络问题"
+    },
+    {
+      "title": "动手练习（30分钟）",
+      "time": 30,
+      "tasks": [
+        {
+          "id": "task1",
+          "name": "练习1：报错分类（8分钟）",
+          "desc": "将以下报错信息归类到正确的层面（前端/后端/网络/鉴权）：",
+          "errors": [
+            "1. POST /api/8d/status → Status 500 → Response: {detail: 'duplicate key'} → ___（后端）",
+            "2. Console: Uncaught TypeError: Cannot read property 'status' of null → ___（前端）",
+            "3. Network: GET /api/tasks/mine → Status 401 → ___（鉴权）",
+            "4. Console: GET https://workbench.dgjoystar.com/api/health net::ERR_CONNECTION_REFUSED → ___（网络/服务器没启动）",
+            "5. Network: POST /api/complaints → Status 404 → ___（路由/地址错）",
+            "6. Console: Uncaught ReferenceError: showToast is not defined → ___（前端，函数名写错或未导入）"
+          ]
+        },
+        {
+          "id": "task2",
+          "name": "练习2：模拟Bug定位流程（12分钟）",
+          "desc": "以下三个场景，写出你的诊断步骤和判断结论：",
+          "scenario1": "场景A：打开8D工作台仪表盘，统计数字显示「进行中 NaN」「逾期 NaN」。\n\n诊断：NaN = Not a Number（不是一个数字）。Console可能有：从API取到的数据是字符串而非数字，做了数学运算变成NaN。检查Network中统计API的Response，看返回的count字段是数字还是字符串。",
+          "scenario2": "场景B：创建客诉点保存，页面卡住不动，Console无报错，Network有一个POST请求一直pending（转圈）。\n\n诊断：请求发出去了但服务器没响应 → 后端可能卡住了（死循环、数据库锁等）。不是前端问题。检查后端日志（uvicorn/systemd日志）。",
+          "scenario3": "场景C：手机上打开8D工作台，登录后白屏。电脑上正常。\n\n诊断：环境差异。手机浏览器可能不支持某些JS语法。Console报错可能有 'Unexpected token' 或 'xxx is not supported'。或者钉钉SDK在非钉钉环境报错。"
+        },
+        {
+          "id": "task3",
+          "name": "练习3：阅读错误堆栈（5分钟）",
+          "desc": "以下是一条完整的错误堆栈（Stack Trace）。找到报错的文件名和行号：",
+          "stack": "Uncaught TypeError: Cannot read property 'status' of null\n    at submitG3 (app.js:247:25)\n    at HTMLButtonElement.onclick (index.html:156:42)",
+          "analysis": "解读：\n- 错误类型：TypeError（类型错误）——尝试读取null的属性\n- 报错位置：app.js 第247行第25个字符\n- 触发位置：index.html 第156行的按钮点击事件\n→ 去app.js第247行看，submitG3函数中某个对象是null，但仍然尝试访问它的.status属性"
+        },
+        {
+          "id": "task4",
+          "name": "练习4：判断修复方向（5分钟）",
+          "desc": "根据报错判断该找谁修复：",
+          "cases": [
+            "1. 「保存后列表没刷新」→ Console无报错，Network中保存请求200成功 → 前端问题：保存成功后没调refreshList()",
+            "2. 「保存报500 Internal Server Error」→ Response显示 'column does not exist' → 后端数据库问题：缺字段",
+            "3. 「页面打不开，ERR_CONNECTION_REFUSED」→ 运维问题：后端服务没启动，需要systemctl restart",
+            "4. 「钉钉内能打开，浏览器不能」→ 钉钉相关：浏览器没有钉钉SDK，免登失败"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "总结反馈（10分钟）",
+      "time": 10,
+      "content": "### 本课核心收获\n\n1. **Console = 听诊器**：红色报错告诉你哪行代码出了问题\n2. **Network = 透视镜**：看请求发没发、状态码多少、返回了什么\n3. **报错分类口诀**：Console红字=前端，500=后端，404=地址，401=鉴权，ERR=网络\n4. **错误堆栈**：告诉你文件名+行号，直接定位到问题代码\n\n从现在开始，每次AI交付后你看页面时：\n1. 先开Console看有没有红字\n2. 再开Network看API请求正常吗\n3. 两个都正常 → 页面级别的bug才可能是逻辑问题\n\n### 下节课\n\nL08：综合验收。把L1（审查）+ L2（测试+Bug定位）全用上，给AI交付做最终上线判断。"
+    }
+  ],
+
+  "preTest": [
+    {
+      "id": "Q01", "type": "choice",
+      "question": "Console报错 `Cannot read property 'status' of null` 表示什么？",
+      "options": ["A. 变量status的值是null", "B. 尝试从null对象读取status属性", "C. status属性不存在", "D. 函数调用失败"],
+      "answer": 1,
+      "explanation": "这句话的意思是：代码尝试读取某个对象的status属性，但这个对象本身是null。就像你要从一个空箱子里拿东西——箱子都没有，哪来的东西。修复方法：在读属性前先判断对象是否为null。"
+    },
+    {
+      "id": "Q02", "type": "choice",
+      "question": "Network面板中，状态码500表示：",
+      "options": ["A. 请求成功", "B. 请求地址错误", "C. 服务器内部错误", "D. 没有权限"],
+      "answer": 2,
+      "explanation": "500 Internal Server Error = 服务器内部出错。前端请求正确到达了服务器，但服务器处理时崩了。需要看Response的详细信息判断具体原因。"
+    },
+    {
+      "id": "Q03", "type": "choice",
+      "question": "按钮点了没反应，Console无报错，Network无新请求。问题最可能在：",
+      "options": ["A. 后端服务器崩溃", "B. 前端事件没绑定或条件没满足", "C. 数据库连不上", "D. 网络断开"],
+      "answer": 1,
+      "explanation": "Network没新请求 = 前端根本没发出请求。说明点击事件没触发——可能是事件绑定错误、条件判断拦截了、或者按钮被禁用了。需要检查onclick绑定和前置条件。"
+    },
+    {
+      "id": "Q04", "type": "choice",
+      "question": "错误堆栈 `at submitG3 (app.js:247:25)` 告诉我们：",
+      "options": ["A. 错误发生在app.js文件的第247行第25个字符", "B. 错误发生在submitG3函数的返回值", "C. app.js文件有247个错误", "D. 需要重启app.js"],
+      "answer": 0,
+      "explanation": "错误堆栈格式：函数名 (文件名:行号:列号)。247:25 表示第247行第25个字符位置。直接跳到这个位置就能看到出错的代码。"
+    },
+    {
+      "id": "Q05", "type": "choice",
+      "question": "页面出现 `ERR_CONNECTION_REFUSED` 首先应该检查：",
+      "options": ["A. JavaScript代码", "B. CSS样式", "C. 后端服务是否启动", "D. 数据库表结构"],
+      "answer": 2,
+      "explanation": "Connection Refused = 连接被拒绝 = 目标服务器没在监听该端口。最可能原因：后端服务没启动。用 `systemctl status` 或 `curl localhost:3008/health` 检查。"
+    }
+  ],
+
+  "postTest": [
+    {
+      "id": "P01",
+      "type": "scenario",
+      "question": "场景：AI交付了8D工作台的「D8关闭」功能。你打开页面点关闭，按钮变灰后没反应。\n\nConsole显示：`POST /api/8d/12/status 500 (Internal Server Error)`\nNetwork中Response显示：`{\"detail\": \"null value in column 'team_feedback' violates not-null constraint\"}`\n\n请诊断：问题在哪？怎么修？",
+      "reference": "诊断：后端数据库错误——team_feedback字段不允许null，但前端没有传这个值。\n修复方向：\n1. 前端在D8关闭表单中必须包含团队评价输入框\n2. 前端提交时确保team_feedback有值（至少不为null）\n3. 后端也应该对team_feedback做校验，如果为空返回用户友好的错误提示，而不是数据库原始报错"
+    },
+    {
+      "id": "P02",
+      "type": "scenario",
+      "question": "场景：你说「8D工作台的任务列表加载不出来」。AI说「我检查了代码没问题」。你应该怎么证明有问题？",
+      "reference": "不靠嘴说，靠证据：\n1. 打开F12 → Network → 刷新页面\n2. 找GET /api/tasks的请求 → 截图状态码和Response\n3. 如果状态码500 → 截图Response里的错误详情\n4. 如果状态码200但数据为空 → Console看有没有数据处理报错\n5. 把截图+Network日志发给AI\n\n有图有真相。比「我觉得有问题」有效100倍。这就是为什么你要学会用开发者工具——它是你和AI之间沟通bug的共同语言。"
+    }
+  ],
+
+  "supplements": [
+    {
+      "title": "HTTP状态码速记",
+      "items": [
+        "2xx 成功：200 OK, 201 Created",
+        "3xx 重定向：301/302",
+        "4xx 客户端错误：400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found",
+        "5xx 服务器错误：500 Internal Error, 502 Bad Gateway, 503 Unavailable"
+      ]
+    }
+  ]
+}
