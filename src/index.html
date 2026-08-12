@@ -109,10 +109,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 
 <script>
 var API='/training/api',CONTENT='/training/content',UID='',_lessons=[],_progress={},_currentLesson=null,_preTestAnswers=[];
-var APP_VERSION='3';
+var APP_VERSION='4';
 (function initApp(){
   // Force reload if version mismatch (cache bust for DingTalk)
-  fetch(CONTENT+'/manifest.json?_='+Date.now()).then(function(r){return r.json()}).then(function(m){
+  fetch(CONTENT+'/manifest.json?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(m){
     if(m.version&&m.version!==localStorage._appVersion){localStorage._appVersion=m.version;location.reload(true);}
   }).catch(function(){});
   UID=localStorage._uid||('user_'+Date.now());localStorage._uid=UID;
