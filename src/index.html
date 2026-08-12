@@ -172,7 +172,7 @@ function loadMatrix(){
   fetch(CONTENT+'/matrix.json').then(function(r){return r.json()}).then(function(d){
     var lvls=d.levels||[{id:'L1',name:'能审',desc:'看懂AI的输出'},{id:'L2',name:'能验',desc:'验证逻辑正确性'},{id:'L3',name:'能沟通',desc:'写出AI能执行的规格'}];
     var dims=d.dimensions||['认知理解','实操技能','判断决策'];
-    var h='<div class="card" style="text-align:center;padding:16px"><canvas id="radar" width="300" height="360"></canvas></div>';
+    var h='<div class="card" style="text-align:center;padding:16px"><canvas id="radar" width="320" height="420"></canvas></div>';
     h+='<div class="card"><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;text-align:center"><thead><tr><th style="padding:8px;background:#f8f9fa"></th>';
     lvls.forEach(function(l){h+='<th style="padding:8px;background:#f8f9fa;font-weight:700"><span class="badge badge-l1">'+l.id+'</span><br>'+l.name+'</th>';});
     h+='</tr></thead><tbody>';
@@ -190,7 +190,7 @@ function loadMatrix(){
 
 function drawRadar(lvls,dims){
   var c=document.getElementById('radar');if(!c)return;
-  var ctx=c.getContext('2d'),W=c.width,H=c.height,cx=W/2,cy=H/2,r=Math.min(cx,cy)-35;
+  var ctx=c.getContext('2d'),W=c.width,H=c.height,cx=W/2,cy=150,r=Math.min(cx,cy)-40;
   var n=dims.length,colors=['#2e7d32','#e65100','#1565c0'],vals=[[3,2,1],[4,3,2],[5,4,3]];
   for(var i=1;i<=5;i++){
     ctx.beginPath();ctx.strokeStyle='#e0e0e0';ctx.lineWidth=0.5;
