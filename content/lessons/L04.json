@@ -1,0 +1,176 @@
+{
+  "id": "L04",
+  "title": "代码审查实战",
+  "desc": "前三课是认识零件，这一课是看整台设备。用6项审查清单，对8D工作台的一个完整功能做代码审查。",
+  "objectives": [
+    "掌握6项审查清单的逐项检查流程",
+    "能从功能描述出发，逐项验证代码是否覆盖所有需求",
+    "能输出结构化审查记录（具体行号 + 问题描述 + 修改建议）",
+    "能在15分钟内完成一个中型功能的审查"
+  ],
+  "duration": 60,
+  "level": "L1-能审",
+  "prerequisite": "完成L01-L03",
+  "project": "8D工作台（泳道看板 + 分步向导）",
+
+  "sections": [
+    {
+      "title": "概念讲解（20分钟）",
+      "time": 20,
+      "content": "### L1阶段考核：独立完成一次完整审查\n\n本课是L1「能审」的收尾课。你已经具备了：\n- L01：HTML/CSS/JS 分辨能力 + F12工具\n- L02：CSS视觉审查 + diff解读\n- L03：JavaScript逻辑理解 + 漏洞发现\n\n现在把它们串起来，做一次完整的代码审查。\n\n---\n\n### 6项审查清单\n\n这是你每次审查AI交付代码时用的标准清单。抄下来，每次审查都用：\n\n```\n□ 1. 功能完整性\n   需求列的每个点，代码里都有对应的实现吗？\n   AI有没有漏做的功能？\n\n□ 2. 边界处理\n   空白输入怎么处理？\n   极端数值（0、负数、超大数）怎么处理？\n   特殊字符（<script>、超长文本）怎么处理？\n\n□ 3. 数据安全\n   用户输入有没有被校验？\n   会不会保存不该保存的数据？\n   删除操作有没有确认？\n\n□ 4. 用户体验\n   操作有反馈吗？（loading、成功提示、失败提示）\n   错误提示能看懂吗？（不是报英文技术术语）\n   按钮有没有防重复点击？\n\n□ 5. 逻辑一致性\n   相似场景处理方式一致吗？（不能这里弹toast、那里弹alert）\n   命名风格统一吗？（不能一会儿驼峰一会儿下划线）\n   颜色/字号/间距跟其他地方一致吗？\n\n□ 6. 变更影响\n   改了这段代码，可能影响哪些其他功能？\n   依赖它的地方有没有一起改？\n   数据库字段改了，API接口同步了吗？\n```\n\n---\n\n### 审查实战示例：8D工作台「任务完成」功能\n\n**功能描述**：操作工点击「完成」按钮，上传照片（如果需要），任务状态变为COMPLETED。\n\n**AI交付的代码**：\n```javascript\n// 任务完成处理\nfunction handleTaskComplete(taskId) {\n  let task = app.tasks.find(t => t.id === taskId);\n  task.status = 'COMPLETED';\n  saveToDB(task);\n  showToast('任务已完成');\n  refreshTaskList();\n}\n```\n\n**用6项清单审查**：\n\n| # | 检查项 | 发现 | 结论 |\n|---|--------|------|------|\n| 1 | 功能完整性 | 需求说「需要拍照的任务必须上传照片」，但代码里没有拍照检查和上传逻辑 | ❌ 缺失 |\n| 2 | 边界处理 | taskId不存在时，`app.tasks.find`返回undefined，后续代码会报错 | ❌ 有bug |\n| 3 | 数据安全 | 没有校验操作人身份——任何拿到taskId的人都能完成 | ❌ 有漏洞 |\n| 4 | 用户体验 | `showToast`是好的反馈 ✅ | ✅ 通过 |\n| 5 | 逻辑一致性 | 用 `showToast` 反馈，跟项目其他地方一致 ✅ | ✅ 通过 |\n| 6 | 变更影响 | 改了task.status，但没更新task的updated_at时间戳 | ⚠️ 建议 |\n\n**审查记录输出**：\n\n```\n【审查记录】\n功能：8D工作台 — 任务完成\n审查人：Jacky  日期：2026-08-12\n\n[问题] 需求2（拍照校验）未实现\n  位置：handleTaskComplete函数，第3行\n  描述：需求要求「require_photo=true的任务必须上传照片后才能完成」\n        但代码中完全没有检查和上传逻辑\n  建议：在 task.status = 'COMPLETED' 之前增加：\n        if (task.require_photo && !task.photo_url) {\n          showToast('请先拍照上传');\n          return;\n        }\n\n[问题] taskId无效未处理\n  位置：handleTaskComplete函数，第2行\n  描述：如果taskId不存在，app.tasks.find返回undefined\n        第3行 task.status 会报错「Cannot read property of undefined」\n  建议：增加 if (!task) { showToast('任务不存在'); return; }\n\n[问题] 缺少身份校验\n  位置：handleTaskComplete函数，第1行\n  描述：函数没有接收user参数，任何人知道taskId就能完成任务\n  建议：增加 if (task.assignee !== app.currentUser.id) { showToast('这不是你的任务'); return; }\n\n[建议] 更新updated_at时间戳\n  位置：第3行之后\n  描述：任务状态变更但没有更新时间戳，无法追踪操作时间\n  建议：增加 task.updated_at = new Date().toISOString();\n\n审查结论：⚠️ 不可上线。需修复前3个问题，第4个建议可选。\n```\n\n---\n\n### 审查记录的格式要求\n\n每次审查输出必须包含：\n1. **标签**：[通过] / [问题] / [建议]\n2. **位置**：在哪个函数/文件的哪一行\n3. **描述**：具体什么问题\n4. **建议**：怎么改（给AI能直接执行的明确指令）\n5. **结论**：✅可上线 / ⚠️有条件上线 / ❌不可上线\n\n**不好的审查记录**：「这段代码有问题」\n**好的审查记录**：「第3行 task.status 前缺少 task != null 判断，当taskId无效时会报错」\n\n差别在于：AI看到好的记录，不需要追问就能直接改。"
+    },
+    {
+      "title": "动手练习（30分钟）",
+      "time": 30,
+      "tasks": [
+        {
+          "id": "task1",
+          "name": "练习1：审查表单提交逻辑（12分钟）",
+          "desc": "以下是AI交付的8D工作台「客诉创建」表单提交代码。用6项清单逐项审查，输出审查记录：",
+          "code": "// 客诉创建\nfunction createComplaint() {\n  let form = {\n    customer: document.getElementById('customer').value,\n    partNo: document.getElementById('partNo').value,\n    defect: document.getElementById('defect').value,\n    quantity: document.getElementById('quantity').value,\n    batch: document.getElementById('batch').value,\n    severity: document.getElementById('severity').value,\n    date: document.getElementById('date').value\n  };\n  \n  fetch('/api/complaints', {\n    method: 'POST',\n    body: JSON.stringify(form)\n  }).then(r => r.json()).then(data => {\n    showToast('客诉已创建');\n    location.href = '#complaint/' + data.id;\n  });\n}",
+          "reference_hints": [
+            "功能完整性：需求要求必填字段：客户、零件号、缺陷描述、数量、批次、严重度、日期。代码都取了吗？→ 取了，但没校验",
+            "边界处理：数量如果输入「abc」或者负数呢？→ quantity直接传字符串，后端可能报错",
+            "数据安全：有没有XSS风险？→ 用户输入直接拼接，没有转义",
+            "用户体验：有没有loading状态？→ 没有，用户点了按钮没反应会以为没点上",
+            "逻辑一致性：统一用showToast → ✅",
+            "变更影响：新增字段是否影响列表查询 → 验收时检查"
+          ]
+        },
+        {
+          "id": "task2",
+          "name": "练习2：对比两份审查记录（8分钟）",
+          "desc": "以下是练习1的两份审查记录。判断哪份更有效，为什么：",
+          "record_a": "审查记录A：\n[问题] 表单验证全部缺失\n[建议] 加上验证\n\n结论：不可上线",
+          "record_b": "审查记录B：\n[问题] customer必填但未校验 — 第3行，建议加 if(!form.customer){showToast('请填写客户');return;}\n[问题] quantity未做数字校验 — 第6行，建议加 if(isNaN(form.quantity)||form.quantity<=0){showToast('数量无效');return;}\n[问题] 按钮无loading态 — 建议在fetch前加 btn.disabled=true; btn.textContent='保存中...'\n\n结论：不可上线。修复以上3项后可上线。",
+          "expected_answer": "记录B更好。原因：\n1. A只说「加验证」——AI不知道验证什么、怎么验证\n2. B给出了：具体位置（第3行）、具体问题（customer必填但未校验）、具体修改方案（if判断+toast提示）\n3. B的每一条都是AI可以直接执行的指令，不需要追问"
+        },
+        {
+          "id": "task3",
+          "name": "练习3：审查表单位置和视觉一致性（5分钟）",
+          "desc": "你打开8D工作台的客诉创建页面，用L01+L02的技能做视觉审查：\n1. F12选择「提交」按钮 → 检查它的颜色、大小、圆角是否跟项目中其他按钮一致\n2. 检查表单输入框的placeholder文字是否完整（每个输入框都有提示吗？）\n3. 检查必填项有没有红色星号标记\n用你学到的CSS知识判断：如果按钮颜色不对，应该改哪个CSS属性？",
+          "reference_hints": [
+            "检查按钮class：应该是 btn-primary（蓝色）而不是 btn-default（灰色）",
+            "检查CSS中 .btn-primary 的 background 属性",
+            "检查form-group中是否有 .required 类"
+          ]
+        },
+        {
+          "id": "task4",
+          "name": "L1阶段考核（5分钟）",
+          "desc": "完成以下自评。全部通过 = L1「能审」合格：",
+          "checklist": [
+            "□ 我能用F12找到页面上任意元素对应的HTML代码",
+            "□ 我能看懂CSS diff，说出改动影响什么视觉效果",
+            "□ 我能用中文翻译不超过20行的JavaScript判断逻辑",
+            "□ 我能用6项清单完成一个功能的代码审查",
+            "□ 我能在审查记录中给出具体位置+问题描述+修改建议",
+            "□ 我能对审查结果做出三选一判断：可上线/有条件上线/不可上线"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "总结反馈（10分钟）",
+      "time": 10,
+      "content": "### L1「能审」阶段总结\n\n四节课下来，你的能力变化：\n\n| 课前 | 课后 |\n|------|------|\n| 看不懂代码 | 能分辨HTML/CSS/JS三种代码 |\n| 不知道F12是什么 | 能用F12在页面和代码间建立映射 |\n| 不懂CSS | 能从diff和截图中判断CSS改动的影响 |\n| 不懂if/else | 能用中文翻译JS判断逻辑，发现遗漏的分支 |\n| 不会审查 | 能用6项清单输出结构化审查记录 |\n\n### L2「能验」预告\n\nL1让你能「看」代码。L2让你能「验」代码：\n- L05：数据从哪来到哪去（数据库+API）\n- L06：功能测试与边界测试\n- L07：Bug定位（Console听诊）\n- L08：综合验收（上线判断）\n\nL2的训练场地从气泡图转向8D工作台主体——你会开始追踪真实的数据流和API调用。"
+    }
+  ],
+
+  "preTest": [
+    {
+      "id": "Q01",
+      "type": "choice",
+      "question": "代码审查清单中，「边界处理」主要检查什么？",
+      "options": [
+        "A. 代码的书写格式是否美观",
+        "B. 空白输入、极端数值、特殊字符等情况是否被正确处理",
+        "C. 变量名是否符合规范",
+        "D. 文件大小是否超标"
+      ],
+      "answer": 1,
+      "explanation": "边界处理检查异常情况——空输入、负数、零、超长文本、特殊字符等。正常输入一般都能处理对，但边界情况容易漏。"
+    },
+    {
+      "id": "Q02",
+      "type": "choice",
+      "question": "以下哪份审查记录对AI最有帮助？",
+      "options": [
+        "A. 「代码写得不好，重写」",
+        "B. 「第3行：task可能为null，建议在task.status前增加`if (!task) return;`」",
+        "C. 「感觉有问题但说不清楚」",
+        "D. 「整体还行，有些小问题」"
+      ],
+      "answer": 1,
+      "explanation": "好的审查记录 = 具体位置 + 具体问题 + 具体修改方案。AI不需要追问就能直接执行。"
+    },
+    {
+      "id": "Q03",
+      "type": "choice",
+      "question": "审查结论「⚠️ 有条件上线」适用于哪种情况？",
+      "options": [
+        "A. 代码完全没有bug",
+        "B. 核心功能缺失或严重bug",
+        "C. 功能全部实现，但有一些不影响核心流程的小问题",
+        "D. 代码无法运行"
+      ],
+      "answer": 2,
+      "explanation": "有条件上线 = 核心功能正常、没有严重bug，但有一些小问题（如缺个loading状态、某个非关键字段缺校验）。修复后可上线。"
+    },
+    {
+      "id": "Q04",
+      "type": "choice",
+      "question": "审查「变更影响」时主要关注什么？",
+      "options": [
+        "A. 代码的作者是谁",
+        "B. 改了这段代码可能影响哪些其他功能或文件",
+        "C. 代码的注释是否详细",
+        "D. Git提交信息是否规范"
+      ],
+      "answer": 1,
+      "explanation": "变更影响 = 改了一个地方，会不会牵连其他功能。比如改了数据库字段，API接口也要同步改；改了公共CSS变量，所有用到它的地方都会变。"
+    },
+    {
+      "id": "Q05",
+      "type": "choice",
+      "question": "taskId无效时 `app.tasks.find(t => t.id === taskId)` 会返回什么？",
+      "options": [
+        "A. 一个空对象 {}",
+        "B. undefined（未定义）",
+        "C. null",
+        "D. 报错"
+      ],
+      "answer": 1,
+      "explanation": "Array.find()在没找到匹配项时返回undefined。后续如果直接使用（如task.status），JavaScript会报错：Cannot read property 'status' of undefined。这就是为什么要先检查 `if (!task) return;`"
+    }
+  ],
+
+  "postTest": [
+    {
+      "id": "P01",
+      "type": "scenario",
+      "question": "场景：AI交付了8D工作台「删除客诉」功能。需求要求：只有PENDING状态的客诉可以删除，删除前需要二次确认。\n\nAI的代码：\n```javascript\nfunction deleteComplaint(id) {\n  deleteFromDB(id);\n  showToast('已删除');\n  refreshList();\n}\n```\n\n请用6项清单审查这段代码，输出审查记录。",
+      "reference": "审查记录：\n[问题] 第2行 — 没有检查客诉状态。应加：if (complaint.status !== 'PENDING') return showToast('只能删除待处理客诉')\n[问题] 第2行 — 没有二次确认。应加 confirm('确认删除该客诉？') 判断\n[问题] 第1行 — 没有权限检查。应加 if (!currentUser.isAdmin) return showToast('无权限')\n[问题] 第2行 — 没有检查客诉是否关联了8D报告。如已关联，删除会导致数据不一致\n结论：❌ 不可上线。需修复全部4项问题。"
+    },
+    {
+      "id": "P02",
+      "type": "scenario",
+      "question": "场景：你认为以下审查记录哪个级别最合理？为什么？\n\n某功能：需求5项，4项已实现。第5项（导出Excel）未实现。其他功能正常，无bug，UI一致。",
+      "reference": "结论：⚠️ 有条件上线。\n理由：核心功能全部正常，缺失的是导出功能而非核心流程。可以先行上线，导出功能作为下个版本补充。\n如果缺失的是核心功能（比如保存按钮没反应），那就是 ❌ 不可上线。"
+    }
+  ],
+
+  "supplements": [
+    {
+      "title": "L1审查清单打印版",
+      "items": [
+        "□ 1. 功能完整性 — 需求列的每个点都有实现吗？",
+        "□ 2. 边界处理 — 空白/极端/特殊/并发都处理了吗？",
+        "□ 3. 数据安全 — 输入校验、权限检查、操作确认",
+        "□ 4. 用户体验 — loading/成功/失败提示，按钮防重复",
+        "□ 5. 逻辑一致性 — 风格统一，反馈方式统一",
+        "□ 6. 变更影响 — 改一处是否要同步改其他地方？"
+      ]
+    }
+  ]
+}

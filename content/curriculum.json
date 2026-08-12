@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "total_lessons": 3,
+  "total_lessons": 4,
   "stages": 4,
   "lessons": [
     {
@@ -29,6 +29,15 @@
       "duration": 60,
       "level": "L1-能审",
       "dimension": "认知理解"
+    },
+    {
+      "id": "L04",
+      "number": 4,
+      "title": "代码审查实战",
+      "stage": 1,
+      "duration": 60,
+      "level": "L1-能审",
+      "dimension": "实操技能"
     }
   ]
 }
