@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "total_lessons": 8,
+  "total_lessons": 9,
   "stages": 4,
   "lessons": [
     {
@@ -74,6 +74,15 @@
       "duration": 60,
       "level": "L2-能验",
       "dimension": "判断决策"
+    },
+    {
+      "id": "L09",
+      "number": 9,
+      "title": "Prompt工程 — 说AI能听懂的话",
+      "stage": 3,
+      "duration": 60,
+      "level": "L3-能沟通",
+      "dimension": "认知理解"
     }
   ]
 }
