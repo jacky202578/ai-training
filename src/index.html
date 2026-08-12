@@ -217,18 +217,6 @@ function drawRadar(lvls,dims){
     for(var j=0;j<n;j++){var a=Math.PI*2*j/n-Math.PI/2,rr=r*vals[li][j]/5,x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr;j===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
     ctx.closePath();ctx.fill();ctx.stroke();
   });
-  // Legend — stacked vertically to avoid overlap
-  var legendY=H-50;
-  ctx.fillStyle='#fff';ctx.fillRect(0,legendY-10,W,60);
-  lvls.forEach(function(l,i){
-    var y=legendY+i*18;
-    ctx.fillStyle=colors[i];ctx.fillRect(10,y-6,10,10);
-    ctx.fillStyle='#333';ctx.font='11px sans-serif';ctx.textAlign='left';
-    ctx.fillText(l.id+' '+l.name,26,y+2);
-    // Show dimension values
-    var v=vals[i];ctx.fillStyle='#888';ctx.font='9px sans-serif';
-    ctx.fillText(dims.map(function(d,di){return d.substring(0,2)+':'+v[di]}).join(' | '),26,y+12);
-  });
 }
 function loadLessons(){
   Promise.all([
