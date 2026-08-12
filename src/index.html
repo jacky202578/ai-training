@@ -174,7 +174,7 @@ function loadMatrix(){
     var dims=d.dimensions||['认知理解','实操技能','判断决策'];
     var colors={'L1':'#2e7d32','L2':'#e65100','L3':'#1565c0'},vals={'L1':[3,2,1],'L2':[4,3,2],'L3':[5,4,3]};
     var h='<div class="card" style="text-align:center;padding:16px"><canvas id="radar" width="300" height="300"></canvas>';
-    h+='<div style="display:flex;justify-content:center;gap:24px;margin-top:-8px;flex-wrap:wrap">';
+    h+='<div style="display:flex;justify-content:center;gap:24px;margin-top:-58px;flex-wrap:wrap">';
     lvls.forEach(function(l){
       h+='<div style="text-align:left"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:'+colors[l.id]+';vertical-align:middle;margin-right:6px"></span>';
       h+='<strong style="font-size:13px;color:'+colors[l.id]+'">'+l.id+' '+l.name+'</strong>';
