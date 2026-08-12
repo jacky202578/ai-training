@@ -292,20 +292,29 @@ function saveProgress(data){
   fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:UID,lesson_id:k,data:d})}).catch(function(){});
 }
 
-document.querySelector('[data-page="report"]').addEventListener('click',function(){
+function loadReportPage(){
   if(!UID)return;
-  fetch(API+'?uid='+UID+'&_='+Date.now()).then(function(r){return r.json()}).then(function(d){
-    var ls=d.lessons||{},done=0,tt=d.total_time||0;
-    Object.keys(ls).forEach(function(k){if(ls[k].status==='done')done++;});
-    var p=_lessons.length?Math.round(done/_lessons.length*100):0;
+  Promise.all([
+    fetch(CONTENT+'/curriculum.json?_='+Date.now()).then(function(r){return r.json()}),
+    fetch(API+'?uid='+UID+'&_='+Date.now()).then(function(r){return r.json()})
+  ]).then(function(r){
+    var all=r[0].lessons||[],pro=r[1].lessons||{},tt=r[1].total_time||0;
+    var done=0;all.forEach(function(l){if((pro[l.id]||{}).status==='done')done++;});
+    var p=all.length?Math.round(done/all.length*100):0;
     var h='<div class="card" style="text-align:center"><div style="font-size:48px;font-weight:700;color:var(--pri)">'+p+'%</div>';
-    h+='<p style="color:var(--text2)">'+done+'/'+_lessons.length+' 课时完成</p>';
+    h+='<p style="color:var(--text2)">'+done+'/'+all.length+' 课时完成</p>';
     h+='<div class="progress-bar" style="margin:12px auto;max-width:200px"><div class="progress-fill" style="width:'+p+'%"></div></div>';
-    h+='<p style="font-size:12px;color:var(--text2)">累计学习 '+tt+' 分钟</p></div>';
+    h+='<p style="font-size:12px;color:var(--text2)">累计 '+tt+' 分钟</p></div>';
+    all.forEach(function(l,i){
+      var s=pro[l.id]||{},d=s.status==='done';
+      h+='<div class="lesson-card'+(d?' done':'')+'"><div class="lesson-num" style="background:'+(d?'#e8f5e9':'#f0f0f0')+';color:'+(d?'var(--green)':'#999')+'">'+(i+1)+'</div>';
+      h+='<div class="lesson-info"><h4>'+l.title+'</h4><div class="meta">'+(d?'✅ 已完成':(s.pre_test_done?'📝 已自测':'⬜ 未开始'))+'</div></div></div>';
+    });
     document.getElementById('report-content').innerHTML=h;
     document.getElementById('report-subtitle').textContent='已学 '+done+' 课 · '+p+'%';
   }).catch(function(){});
-});
+}
+document.querySelector('[data-page="report"]').addEventListener('click',loadReportPage);
 </script>
 </body>
 </html>
