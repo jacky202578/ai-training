@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "total_lessons": 7,
+  "total_lessons": 8,
   "stages": 4,
   "lessons": [
     {
@@ -65,6 +65,15 @@
       "duration": 60,
       "level": "L2-能验",
       "dimension": "实操技能"
+    },
+    {
+      "id": "L08",
+      "number": 8,
+      "title": "综合验收 — 上线判断",
+      "stage": 2,
+      "duration": 60,
+      "level": "L2-能验",
+      "dimension": "判断决策"
     }
   ]
 }
