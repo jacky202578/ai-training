@@ -1,0 +1,180 @@
+{
+  "id": "L03",
+  "title": "看懂JavaScript判断逻辑",
+  "desc": "JavaScript就是「如果…就…否则…」。你看合同条款怎么审的，看代码逻辑就怎么审。用8D工作台的门禁逻辑做训练。",
+  "objectives": [
+    "理解变量、if/else、===三个基础概念",
+    "能追踪一段代码的数据流转：从哪来→经过什么判断→到哪去",
+    "能识别条件判断中遗漏的分支",
+    "能看懂简单的for循环"
+  ],
+  "duration": 60,
+  "level": "L1-能审",
+  "prerequisite": "完成L01-L02，能使用F12开发者工具",
+  "project": "8D工作台（门禁逻辑 + 气泡图SVG坐标映射）",
+
+  "sections": [
+    {
+      "title": "概念讲解（20分钟）",
+      "time": 20,
+      "content": "### 开场：代码里的「如果…就…」\n\n你看过合同条款吗？比如：\n\n> 如果乙方逾期交货超过15天，甲方有权单方面解除合同。\n\n代码也有同样的结构：\n\n```javascript\nif (逾期天数 > 15) {\n  甲方.解除合同();\n}\n```\n\nJavaScript就是一套「如果…就…否则…」的判断规则。你看合同条款怎么审——逐条检查有没有漏洞、有没有矛盾——看代码逻辑也是一样的方法。\n\n---\n\n### 三个必须懂的概念\n\n#### 1. 变量 — 一个存储数据的容器\n\n```javascript\nlet reportId = \"S-012\";        // 8D报告编号\nlet tolerance = 0.015;          // 公差值\nlet isPassed = true;            // 是否通过（true=是，false=否）\n```\n\n**类比**：工单上的一个字段。比如「产品编号」字段的值是「M8-BOLT」。变量就是存储这个值的容器。\n\n**你只需要知道**：看到一个 `let xxx = yyy`，这就是在定义一个变量，名字叫xxx，值是yyy。\n\n#### 2. if/else — 条件判断\n\n```javascript\nif (user.role === \"quality_manager\") {\n  // 如果是品质主管 → 允许审批\n  allowSubmit();\n} else {\n  // 如果不是 → 拒绝\n  showError(\"只有品质主管才能审批\");\n}\n```\n\n**翻译成中文**：\n> 如果（用户的角色 等于 \"quality_manager\"）{\n>     允许提交审批\n> } 否则 {\n>     显示错误：\"只有品质主管才能审批\"\n> }\n\n**`===` 就是「等于」。** 三个等号是比较，一个等号是赋值。不要搞混：\n- `let a = 5` → 把5放进变量a（赋值）\n- `a === 5` → a等于5吗？（判断）\n\n#### 3. 逻辑运算符\n\n| 代码 | 中文 | 工厂类比 |\n|------|------|---------|\n| `===` | 等于 | 公差恰好0.02 |\n| `!==` | 不等于 | 材料不是304不锈钢 |\n| `>` `<` | 大于/小于 | 公差超出上限 |\n| `>=` `<=` | 大于等于/小于等于 | 公差在范围内 |\n| `&&` | 而且（两个条件都满足） | 合格且按时交货 |\n| `||` | 或者（满足一个就行） | 品质主管或管理员 |\n| `!` | 不是（取反） | !合格 = 不合格 |\n\n---\n\n### 8D工作台实战：D3门禁逻辑\n\n这是8D工作台中D3→D4的门禁逻辑（T05中的核心代码）：\n\n```javascript\n// D3→D4 门禁：只有品质主管能审批，且不能审自己的8D\nfunction submitG3(eightDReport, currentUser) {\n  // 第1步：检查是不是品质主管\n  if (currentUser.role !== \"quality_manager\" && currentUser.role !== \"admin\") {\n    return \"拒绝：只有品质主管或管理员才能审批D3\";\n  }\n\n  // 第2步：检查是不是在审自己的8D\n  if (eightDReport.team_leader === currentUser.id && currentUser.role !== \"admin\") {\n    return \"拒绝：你不能审批自己当组长的8D，已上报上级\";\n  }\n\n  // 第3步：检查状态对不对\n  if (eightDReport.status !== \"D3\") {\n    return \"拒绝：当前不是D3状态，无法审批\";\n  }\n\n  // 全部通过 → 放行\n  eightDReport.status = \"D4\";\n  return \"审批通过，进入D4\";\n}\n```\n\n**一句话翻译**：先检查身份（是品质主管吗？）→再检查利益冲突（不是在审自己的吧？）→再检查状态（确实在D3吗？）→全部通过才放行。\n\n**你审查这段代码时，应该想**：\n- 会不会有人绕过去？（比如操作工直接改状态）→函数前面有if拦着\n- 品质主管审自己的8D怎么办？→第2步拦住了\n- 已经是D4的8D还能回到D3再审一次吗？→第3步拦住了\n\n这就是代码审查的思维方式——**找漏洞**。跟审合同一样。\n\n---\n\n### 补充：for循环 — 逐个检查\n\n```javascript\n// 检查所有待审批的8D报告\nlet pendingReports = [\"S-012\", \"S-013\", \"S-014\"];\n\nfor (let report of pendingReports) {\n  if (report.status === \"D3\") {\n    console.log(report.id + \" 等待品质主管审批\");\n  }\n}\n```\n\n**类比**：质检员对托盘上100个零件逐个测量。for循环就是「对列表里每一项都做一遍」。\n\n现在不需要你写for循环，只需要你能看懂：看到一个 `for`，就是在「遍历」。"
+    },
+    {
+      "title": "动手练习（30分钟）",
+      "time": 30,
+      "tasks": [
+        {
+          "id": "task1",
+          "name": "练习1：翻译JavaScript为中文（8分钟）",
+          "desc": "把以下代码翻译成中文，写出每一步的判断逻辑：",
+          "code": "// 代码A：表单验证\nif (complaint.customer === \"\") {\n  showToast(\"请填写客户名称\");\n  return false;\n}\nif (complaint.quantity <= 0) {\n  showToast(\"客诉数量必须大于0\");\n  return false;\n}\nif (complaint.severity !== \"高\" && complaint.severity !== \"中\" && complaint.severity !== \"低\") {\n  showToast(\"严重度只能选择高、中、低\");\n  return false;\n}\nreturn true;",
+          "reference": "翻译：\n1. 如果客诉的客户名称为空 → 弹出提示「请填写客户名称」，返回false（不通过）\n2. 如果客诉数量 ≤ 0 → 弹出提示「客诉数量必须大于0」，返回false\n3. 如果严重度不是高、也不是中、也不是低 → 弹出提示「严重度只能选择高、中、低」，返回false\n4. 全部检查通过 → 返回true（通过）"
+        },
+        {
+          "id": "task2",
+          "name": "练习2：找出逻辑漏洞（10分钟）",
+          "desc": "以下是8D工作台任务完成验证的简化代码。找出它缺少哪些判断：",
+          "code": "// 任务完成验证（有bug的版本）\nfunction completeTask(task, user) {\n  if (task.status !== \"IN_PROGRESS\") {\n    return \"拒绝：任务不在进行中状态\";\n  }\n  task.status = \"COMPLETED\";\n  return \"任务已完成\";\n}",
+          "hints": [
+            "谁都可以点「完成」吗？不需要检查操作人是不是任务的执行人？",
+            "如果任务要求拍照但没有照片，也能完成吗？",
+            "组长分配的任务，操作工可以直接完成吗？还是需要组长确认？"
+          ],
+          "reference": "缺少的判断：\n1. 没有检查 `task.assignee === user.id`（必须任务的执行人才能完成）\n2. 没有检查 `task.require_photo && !task.photo_url`（要求拍照但没传照片→不能完成）\n3. 没有检查 `task.status === \"PENDING\"` 的情况（未认领的任务不能直接完成）"
+        },
+        {
+          "id": "task3",
+          "name": "练习3：追踪气泡图数据映射（7分钟）",
+          "desc": "气泡图中，供应商A的气泡是这样定义的。追踪每个属性对应什么视觉效果：",
+          "code": "<circle cx=\"160\" cy=\"58\" r=\"32\" fill=\"#10b981\" opacity=\"0.7\"/>",
+          "questions": [
+            "cx=160 cy=58 决定了什么？→ 气泡的圆心在SVG坐标系中的位置（XY坐标）",
+            "r=32 决定了什么？→ 气泡的半径（越大→气泡越大→代表采购额越高）",
+            "fill=#10b981 决定了什么？→ 气泡填充绿色（代表准时率≥95%）",
+            "opacity=0.7 决定了什么？→ 70%不透明度（半透明效果，方便看重叠的气泡）",
+            "这个气泡的位置（左上角）意味着什么？→ 价格低、质量高 → 优选供应商"
+          ]
+        },
+        {
+          "id": "task4",
+          "name": "练习4：画出数据流转图（5分钟）",
+          "desc": "8D工作台中，用户点击D3「提交审批」按钮后，数据经历了什么流程？参考第3课概念讲解中的submitG3函数，用箭头画出流程：",
+          "flow": "用户点击按钮 → submitG3(报告, 用户) → 检查角色 → 检查自审冲突 → 检查状态 → 通过：修改报告状态为D4 / 不通过：返回错误信息 → 前端显示结果（toast提示）→ 写入时间线记录"
+        }
+      ]
+    },
+    {
+      "title": "总结反馈（10分钟）",
+      "time": 10,
+      "content": "### 本课核心收获\n\n1. **变量 = 容器**：`let x = 值` → 把值存到x里\n2. **if/else = 判断**：`if (条件) { 做什么 } else { 否则做什么 }`\n3. **`===` = 等于判断**，`!==` = 不等于，`&&` = 而且，`||` = 或者\n4. **审查逻辑 = 找漏洞**：缺了什么判断？谁绕得过去？\n\n### 自查问题\n\n- 给我一段不超过15行的if/else代码，我能用中文翻译出它的逻辑吗？\n- 我能看出条件判断中少了哪个边界情况吗？（比如只判断了数量>0，没判断数量为空）\n- 我能看懂 `&&` 和 `||` 的区别吗？\n\n### 下节课预习\n\n下节课做一次完整的代码审查实战。用6项审查清单，把HTML+CSS+JS串起来审一个完整功能。提前熟悉一下这6项：\n\n1. 功能完整性 2. 边界处理 3. 数据安全 4. 用户体验 5. 逻辑一致性 6. 变更影响"
+    }
+  ],
+
+  "preTest": [
+    {
+      "id": "Q01",
+      "type": "choice",
+      "question": "以下代码中，`===` 的含义是：\n`if (user.role === \"quality_manager\") { ... }`",
+      "options": [
+        "A. 把 \"quality_manager\" 赋值给 user.role",
+        "B. 判断 user.role 是否等于 \"quality_manager\"",
+        "C. 删除 user.role 的值",
+        "D. 创建一个新变量"
+      ],
+      "answer": 1,
+      "explanation": "`===` 是比较运算符，判断两边的值是否相等。一个 `=` 才是赋值。记住：三个等号=比较，一个等号=赋值。"
+    },
+    {
+      "id": "Q02",
+      "type": "choice",
+      "question": "8D工作台D3门禁中，`if (eightDReport.status !== \"D3\")` 的作用是：",
+      "options": [
+        "A. 确保8D报告的状态是D3才能审批",
+        "B. 把8D报告的状态改成D3",
+        "C. 检查用户是不是品质主管",
+        "D. 记录审批日志"
+      ],
+      "answer": 0,
+      "explanation": "`!==` 是「不等于」。所以这句的意思是：如果报告状态不是D3，就不能审批。这是防止在错误的状态下进行审批。"
+    },
+    {
+      "id": "Q03",
+      "type": "choice",
+      "question": "`if (条件A && 条件B)` 表示：",
+      "options": [
+        "A. 条件A或条件B，满足一个就执行",
+        "B. 条件A和条件B，两个都满足才执行",
+        "C. 条件A不是真的就执行",
+        "D. 随机选择一个条件"
+      ],
+      "answer": 1,
+      "explanation": "`&&` 是「而且」——两个条件都必须满足。就像：公差合格且表面无划伤 → 两个都得满足才算合格。`||` 是「或者」。"
+    },
+    {
+      "id": "Q04",
+      "type": "choice",
+      "question": "以下代码有什么问题？\n```javascript\nif (complaint.quantity < 0) {\n  showError(\"数量不能为负数\");\n}\nsaveComplaint(complaint);\n```",
+      "options": [
+        "A. 没有检查数量为0的情况——0也会被保存",
+        "B. 变量名拼错了",
+        "C. showError函数不存在",
+        "D. 没有使用三个等号"
+      ],
+      "answer": 0,
+      "explanation": "只用 `< 0` 检查了负数，但没有处理 `=== 0` 的情况。0件客诉也应该被拦截。应该改成 `<= 0`（小于等于0）。这就是逻辑漏洞——条件判断缺了边界。"
+    },
+    {
+      "id": "Q05",
+      "type": "choice",
+      "question": "气泡图中 `cx=\"160\" cy=\"58\" r=\"32\"` 的含义是：",
+      "options": [
+        "A. 气泡的颜色是红色，透明度32%",
+        "B. 气泡的圆心在坐标(160,58)，半径32像素",
+        "C. 气泡代表160件产品，58个客户，32个供应商",
+        "D. 这是CSS样式定义"
+      ],
+      "answer": 1,
+      "explanation": "在SVG中，cx和cy是圆心坐标，r是半径。这个气泡圆心在SVG画布上的(160,58)位置，半径32像素——气泡的大小和位置由此决定。"
+    }
+  ],
+
+  "postTest": [
+    {
+      "id": "P01",
+      "type": "scenario",
+      "question": "场景：8D工作台的「删除客诉」功能中，AI写了以下验证逻辑：\n\n```javascript\nfunction deleteComplaint(complaintId, user) {\n  if (user.role !== \"admin\") {\n    return \"只有管理员能删除\";\n  }\n  deleteFromDB(complaintId);\n  return \"删除成功\";\n}\n```\n\n请审查这段逻辑，找出可能的漏洞：",
+      "hints": [
+        "只检查了角色，有没有检查客诉的状态？",
+        "已经关联了8D报告的客诉能直接删吗？",
+        "删除操作不需要二次确认吗？"
+      ],
+      "reference": "漏洞：\n1. 没有检查客诉状态——只有PENDING状态的客诉才能删除，其他的不应删除\n2. 没有检查是否关联了8D——如果已创建8D报告，删除客诉会导致数据不一致\n3. 没有软删除/操作日志——直接物理删除不可恢复\n4. 应该增加 `if (complaint.status !== \"PENDING\") return \"只有待处理状态的客诉可删除\"`"
+    },
+    {
+      "id": "P02",
+      "type": "scenario",
+      "question": "场景：以下代码片段来自气泡图中供应商C的定义：\n\n`<circle cx=\"230\" cy=\"106\" r=\"34\" fill=\"#f59e0b\"/>`\n\n和供应商A对比：\n`<circle cx=\"160\" cy=\"58\" r=\"32\" fill=\"#10b981\"/>`\n\n请分析：\n1. 供应商C比A大还是小？（看r值）\n2. 供应商C在A的什么方向？（看cx和cy）\n3. 供应商C和A的颜色分别代表什么？",
+      "reference": "1. r=34 > r=32 → 供应商C稍大（采购额620万 vs A的480万）\n2. C在A的右下方（cx=230>160，cy=106>58）→ 价格更高、质量更低\n3. A是绿色(#10b981)=准时率≥95%=优；C是橙色(#f59e0b)=准时率85-95%=良"
+    },
+    {
+      "id": "P03",
+      "type": "scenario",
+      "question": "场景：8D工作台任务分配功能，有人反馈「操作工小王完成了小李的任务」。检查代码发现：\n\n```javascript\nfunction completeTask(taskId, user) {\n  let task = getTask(taskId);\n  task.status = \"COMPLETED\";\n  saveTask(task);\n  return \"完成\";\n}\n```\n\n这段代码的问题在哪？应该加什么判断？",
+      "reference": "问题：没有检查操作人是不是任务的执行人（assignee）。任何人拿到taskId都能完成任何人的任务。\n\n应该加：\n```javascript\nif (task.assignee !== user.id) {\n  return \"这不是你的任务\";\n}\n```"
+    }
+  ],
+
+  "supplements": [
+    {
+      "title": "关键概念速记卡",
+      "items": [
+        "`let x = 值` → 定义一个变量x，值是...",
+        "`===` → 等于判断（三个等号）",
+        "`!==` → 不等于",
+        "`&&` → 而且（两个都满足）",
+        "`||` → 或者（满足其一）",
+        "`if (条件) { ... } else { ... }` → 如果条件成立做A，否则做B"
+      ]
+    }
+  ]
+}

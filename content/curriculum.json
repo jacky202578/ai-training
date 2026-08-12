@@ -1,9 +1,34 @@
 {
   "version": "1.0.0",
-  "total_lessons": 2,
+  "total_lessons": 3,
   "stages": 4,
   "lessons": [
-    {"id": "L01", "number": 1, "title": "像看图纸一样看代码", "stage": 1, "duration": 60, "level": "L1-能审", "dimension": "认知理解"},
-    {"id": "L02", "number": 2, "title": "看懂CSS改动的影响", "stage": 1, "duration": 60, "level": "L1-能审", "dimension": "认知理解"}
+    {
+      "id": "L01",
+      "number": 1,
+      "title": "像看图纸一样看代码",
+      "stage": 1,
+      "duration": 60,
+      "level": "L1-能审",
+      "dimension": "认知理解"
+    },
+    {
+      "id": "L02",
+      "number": 2,
+      "title": "看懂CSS改动的影响",
+      "stage": 1,
+      "duration": 60,
+      "level": "L1-能审",
+      "dimension": "认知理解"
+    },
+    {
+      "id": "L03",
+      "number": 3,
+      "title": "看懂JavaScript判断逻辑",
+      "stage": 1,
+      "duration": 60,
+      "level": "L1-能审",
+      "dimension": "认知理解"
+    }
   ]
 }
