@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "total_lessons": 9,
+  "total_lessons": 10,
   "stages": 4,
   "lessons": [
     {
@@ -83,6 +83,15 @@
       "duration": 60,
       "level": "L3-能沟通",
       "dimension": "认知理解"
+    },
+    {
+      "id": "L10",
+      "number": 10,
+      "title": "需求拆解 — 把想法变成AI可执行的任务",
+      "stage": 3,
+      "duration": 60,
+      "level": "L3-能沟通",
+      "dimension": "实操技能"
     }
   ]
 }
